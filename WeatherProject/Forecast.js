@@ -7,7 +7,7 @@ class Forecast extends Component {
         return (
             <View style={styles.container}>
                 <Text style={styles.bigText}>
-                    main 이래 {this.props.main}
+                   부모가 import 한 open_weather_map여기서 받아온다 {this.props.main}
                 </Text>
                 <Text style={styles.mainText}>
                     description 이거  : {this.props.description}
