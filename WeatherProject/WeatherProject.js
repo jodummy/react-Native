@@ -1,83 +1,130 @@
 import React, { Component } from "react";
-
-import { StyleSheet, Text, View, TextInput, Image } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  AsyncStorage,
+  Image
+} from "react-native";
 
 import Forecast from "./Forecast";
+import LocationButton from "./LocationButton";
+import textStyles from "./styles/typography.js";
+
+const STORAGE_KEY = "@SmarterWeather:zip";
+
 import OpenWeatherMap from "./open_weather_map";
 
+// This version uses flowers.png from local assets
+import PhotoBackdrop from "./PhotoBackdrop/local_image";
+
+// This version pulls a specified photo from the camera roll
+// import PhotoBackdrop from './PhotoBackdrop';
+
 class WeatherProject extends Component {
-    constructor(props) {
-        super(props);
-        this.state = { zip: "", forecast: null };
-    }
+  constructor(props) {
+    super(props);
+    this.state = { forecast: null };
+  }
 
-    _handleTextChange = event => {
-        let zip = event.nativeEvent.text;
-        OpenWeatherMap.fetchForecast(zip).then(forecast => {
-            this.setState({ forecast: forecast });
-        });
-    };
-
-    render() {
-        let content = null;
-        if (this.state.forecast !== null) {
-            content = (
-                <Forecast
-                    main={this.state.forecast.main}
-                    description={this.state.forecast.description}
-                    temp={this.state.forecast.temp}
-                />
-            );
+  componentDidMount() {
+    AsyncStorage
+      .getItem(STORAGE_KEY)
+      .then(value => {
+        if (value !== null) {
+          this._getForecastForZip(value);
         }
-        return (
-            <View style={styles.container}>
-                    <View style={styles.overlay}>
-                        <View style={styles.row}>
-                            <Text style={styles.mainText}>
-                                Current weather for
-              </Text>
-                            <View style={styles.zipContainer}>
-                                <TextInput
-                                    style={[styles.zipCode, styles.mainText]}
-                                    onSubmitEditing={this._handleTextChange}
-                                    underlineColorAndroid="transparent"
-                                />
-                            </View>
-                        </View>
-                        {content}
-                    </View>
-            </View>
-        );
+      })
+      .catch(error => console.error("AsyncStorage error: " + error.message))
+      .done();
+  }
+
+  _getForecastForZip = zip => {
+    // Store zip code
+    AsyncStorage
+      .setItem(STORAGE_KEY, zip)
+      .then(() => console.log("Saved selection to disk: " + zip))
+      .catch(error => console.error("AsyncStorage error: " + error.message))
+      .done();
+
+    OpenWeatherMap.fetchZipForecast(zip).then(forecast => {
+      this.setState({ forecast: forecast });
+    });
+  };
+
+  _getForecastForCoords = (lat, lon) => {
+    OpenWeatherMap.fetchLatLonForecast(lat, lon).then(forecast => {
+      this.setState({ forecast: forecast });
+    });
+  };
+
+  _handleTextChange = event => {
+    let zip = event.nativeEvent.text;
+    this._getForecastForZip(zip);
+  };
+
+  render() {
+    let content = null;
+    if (this.state.forecast !== null) {
+      content = (
+        <View style={styles.row}>
+          <Forecast
+            main={this.state.forecast.main}
+            temp={this.state.forecast.temp}
+          />
+        </View>
+      );
     }
+
+    return (
+      <PhotoBackdrop>
+        <View style={styles.overlay}>
+          <View style={styles.row}>
+            <Text style={textStyles.mainText}>
+              Forecast for
+            </Text>
+
+            <View style={styles.zipContainer}>
+              <TextInput
+                style={[textStyles.mainText, styles.zipCode]}
+                onSubmitEditing={this._handleTextChange}
+                underlineColorAndroid="transparent"
+              />
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <LocationButton onGetCoords={this._getForecastForCoords} />
+          </View>
+
+          {content}
+
+        </View>
+      </PhotoBackdrop>
+    );
+  }
 }
 
-const baseFontSize = 16;
-
 const styles = StyleSheet.create({
-    container: { flex: 1, alignItems: "center", paddingTop: 30 },
-    backdrop: { flex: 1, flexDirection: "column" },
-    overlay: {
-        paddingTop: 5,
-        backgroundColor: "#000000",
-        opacity: 0.5,
-        flexDirection: "column",
-        alignItems: "center"
-    },
-    row: {
-        flexDirection: "row",
-        flexWrap: "nowrap",
-        alignItems: "flex-start",
-        padding: 30
-    },
-    zipContainer: {
-        height: baseFontSize + 10,
-        borderBottomColor: "#DDDDDD",
-        borderBottomWidth: 1,
-        marginLeft: 5,
-        marginTop: 3
-    },
-    zipCode: { flex: 1, flexBasis: 1, width: 50, height: baseFontSize },
-    mainText: { fontSize: baseFontSize, color: "#FFFFFF" }
+  overlay: { backgroundColor: "rgba(0,0,0,0.1)" },
+  row: {
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24
+  },
+  zipContainer: {
+    borderBottomColor: "#DDDDDD",
+    borderBottomWidth: 1,
+    marginLeft: 5,
+    marginTop: 3,
+    width: 80,
+    height: textStyles.baseFontSize * 2,
+    justifyContent: "flex-end"
+  },
+  zipCode: { flex: 1 }
 });
 
 export default WeatherProject;

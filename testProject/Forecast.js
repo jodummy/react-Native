@@ -7,16 +7,14 @@ class Forecast extends Component {
         return (
             <View style={styles.container}>
                 <Text style={styles.bigText}>
-                    부모가 import 한 open_weather_map여기서 받아온다 {this.props.main}
+                    {this.props.main}
                 </Text>
                 <Text style={styles.mainText}>
-                    description 이거  : {this.props.description}
+                    Current conditions: {this.props.description}
                 </Text>
                 <Text style={styles.bigText}>
-                    temp 야 {this.props.temp}°F
-                </Text>
-
-                <Text style= {{fontStyle: "italic" }}> dsfksdlfjsdlk </Text>
+                    {this.props.temp}°F
+        </Text>
             </View>
         );
     }
@@ -34,4 +32,4 @@ const styles = StyleSheet.create({
     mainText: { flex: 1, fontSize: 16, textAlign: "center", color: "#FFFFFF" }
 });
 
-export default Forecast; 
+export default Forecast;

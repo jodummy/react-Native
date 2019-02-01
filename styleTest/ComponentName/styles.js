@@ -28,6 +28,9 @@ const styles = StyleSheet.create({
     cellFive: { flex: 6 },
     cellSix: { flex: 1 },
     cellSeven: { flex: 1, backgroundColor: '#FFFF00' },
+    btn: {
+        border
+    }
 })
 
 export default styles;
